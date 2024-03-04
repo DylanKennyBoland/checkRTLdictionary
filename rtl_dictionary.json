@@ -1,0 +1,10 @@
+{
+	"Prefixes": {
+		"aref_": "Indicates that the signal is related to the auto-refresh operation or logic.",
+		"mmu_": "Indicates that the signal is coming from the memory-management unit."
+	},
+	"Suffixes": {
+		"_req": "Indicates that the signal is a request line or bus.",
+		"_ctrl": "Indicates that the signal is a control signal or that it is coming from a control block."
+	}
+}

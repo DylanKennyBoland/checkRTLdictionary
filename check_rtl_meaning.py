@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+
+# Modules that we will need:
+import os
+import sys
+import json
+import argparse
+
+# ==== Some General-info Strings ====
+# Tags - define these here so they can be quickly and easily changed
+errorTag   = """\t***Error: """
+successTag = """\t***Success: """
+infoTag    = """\t***Info: """
+
+prefixHelpMsg = infoTag + """Call the script with the --prefix switch and supply the
+prefix whose meaning you want to know. For example,
+
+    check_rtl_meaning.py --prefix pq_
+
+"""
+
+suffixHelpMsg = infoTag + """Call the script with the --suffix switch and supply the
+suffix whose meaning you want to know. For example,
+
+    check_rtl_meaning.py --suffix _req
+
+"""
+
+listAllHelpMsg = infoTag + """Call the script with the --list_all switch in order
+to see all of the prefixes and suffixes used in the RTL, as well as their explanations.
+"""
+
+noArgsMsg  = errorTag + """No input arguments were specified."""
+
+fileReadAttemptMsg = infoTag + """Trying to read in {}"""
+
+fileEmptyMsg = infoTag + """The file at {} is empty... creating the dictionary from scratch"""
+
+unsupportedScriptUsageMsg = errorTag + """Only one switch (--prefix, --suffix, or --list_all) should be supplied at a time"""
+
+prefixSuffixNotFoundMsg = infoTag + """The {} {} could not be found in {}"""
+
+explanationMsg = """{}: {}"""
+
+prefixSectionHeader = """=======================================
+            Prefixes
+=======================================\n\n"""
+
+suffixSectionHeader = """\n=======================================
+            Suffixes
+=======================================\n\n"""
+
+
+# Function to handle the input arguments
+def parsingArguments():
+    parser = argparse.ArgumentParser(description = "Theme for the new wallpaper.")
+    parser.add_argument('--prefix', type = str, help = prefixHelpMsg)
+    parser.add_argument('--suffix', type = str, help = suffixHelpMsg)
+    # Below, we use 'action = 'store_true'' so that we do not need to supply
+    # any argument alongside the '--list_all' switch. If we supply the '--list_all'
+    # switch then "True" will be stored for the 'list_all' argument. It acts like
+    # a boolean variable
+    parser.add_argument('--list_all', action = 'store_true', help = listAllHelpMsg)
+    return parser.parse_args()
+
+fileName = "rtl_dictionary.json" # name of the file
+filePath = "./" # path to the folder with the file
+
+def readInDictionary(pathToFile):
+    with open(pathToFile) as p:
+        try:
+            print(fileReadAttemptMsg.format(pathToFile))
+            dictionary = json.load(p)
+        except:
+            print(fileEmptyMsg.format(pathToFile))
+            dictionary = {
+                "Prefixes" : {
+                "aref_": """Indicates that the signal is related to the auto-refresh operation or logic.""",
+                "mmu_": """Indicates that the signal is coming from the memory-management unit."""
+                },
+                "Suffixes" : {
+                "_req": """Indicates that the signal is a request line or bus.""",
+                "_ctrl": """Indicates that the signal is a control signal or that it is coming from a control block."""
+                }
+            }
+    return dictionary
+
+if __name__ == "__main__":
+
+    # ==== Check if any Arguments were Supplied ====
+    if len(sys.argv) == 1:
+        print(noArgsMsg)
+        exit()
+
+    args = parsingArguments() # parse the input arguments (if there are any)
+    
+    # ==== Check if All the Prefixes and Suffixes are to be listed ====
+    printOutDictionary = False
+    if args.list_all:
+        printOutDictionary = True
+    
+    # ==== Check if the user is wanting to check a prefix meaning ====
+    lookUpPrefix = False
+    if args.prefix:
+        prefix = args.prefix
+        lookUpPrefix = True
+
+    # ==== Check if the user is wanting to check a suffix meaning ====
+    lookUpSuffix = False
+    if args.suffix:
+        suffix = args.suffix
+        lookUpSuffix = True
+
+    # ==== Ensure that only one switch was supplied ====
+    if (lookUpPrefix and lookUpSuffix):
+        print(unsupportedScriptUsageMsg)
+        exit()
+    
+    # ==== Step 1: Read in the RTL dictionary ====
+    rtlDictionary = readInDictionary(filePath + fileName)
+    
+    # ==== Step 2: Check if the prefix or suffix exists and print the explanation if it does ====
+    if (lookUpPrefix):
+        prefixList = rtlDictionary["Prefixes"] # extract the prefix segment of the dictionary
+        if prefix in prefixList: # check if the prefix is in the list
+            prefixExplanation = prefixList[prefix] # extract the comment or explanation
+            print(explanationMsg.format(prefix, prefixExplanation))
+        else:
+            print(prefixSuffixNotFoundMsg.format("prefix", prefix, fileName))
+        exit()
+    elif (lookUpSuffix):
+        suffixList = rtlDictionary["Suffixes"] # extract the suffix segment of the dictionary
+        if suffix in suffixList: # check if the suffix is in the list
+            suffixExplanation = suffixList[suffix] # extract the comment or explanation
+            print(explanationMsg.format(suffix, suffixExplanation))
+        else:
+            print(prefixSuffixNotFoundMsg.format("suffix", suffix, fileName))
+        exit()
+    elif (printOutDictionary):
+        outputMsg = prefixSectionHeader
+        prefixList = rtlDictionary["Prefixes"] # extract the prefix segment of the dictionary
+        suffixList = rtlDictionary["Suffixes"] # extract the suffix segment of the dictionary
+        # ==== Add the prefixes and their explanations first ====
+        for key, value in prefixList.items():
+            outputMsg += f"""{key}: {value}\n"""
+        
+        outputMsg += suffixSectionHeader
+        
+        # ==== Add the suffixes next ====
+        for key, value in suffixList.items():
+            outputMsg += f"""{key}: {value}\n"""    
+        
+        # ==== Print the string to the console ====
+        print(outputMsg)
+        exit()
