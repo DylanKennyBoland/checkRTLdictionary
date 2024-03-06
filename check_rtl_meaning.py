@@ -16,9 +16,9 @@
 # already being used to indicate a request signal. They decide to use this suffix too, and a consistency begins to build up.
 #
 # (2) A new member of the team (or a long-standing one, as the case may be!) might be wondering what a certain prefix or suffix means. 
-# Say, for example, “PQ_”. They could then search the list of prefixes in the file (from anywhere in their environment and without 
-# opening the file – details of how this can be done are in <ADD DOCUMENT>) and see that “PQ_” indicates that 
-# whatever signal they are looking at is somehow related to the “Placement Queue”.
+# Say, for example, “AREF_”. They could then search the list of prefixes in the file (from anywhere in their environment and without 
+# opening the file – details of how this can be done are in <ADD DOCUMENT>) and see that “AREF_” indicates that 
+# whatever signal they are looking at is somehow related to the “Auto-Refresh” operation or logic.
 
 # Modules that we will need:
 import os
