@@ -1,4 +1,24 @@
 #!/usr/bin/env python3
+#
+# Author: Dylan Boland
+#
+# ==== Description of Script ====
+# This script prints out the meaning of a prefix or suffix
+# that is supplied by the user on the command line.
+#
+# The prefixes and suffixes that are used throughout the RTL are stored
+# in rtl_dictionary.json, a file located in <ADD PATH>.
+#
+# There are two main reasons for having this script and the rtl_dictionary.json file:
+#
+# (1) Should someone be thinking of introducing a new prefix or suffix for, say, the word “request”, they can check this 
+# file to see if there is already one in use. They might have been thinking of using “_rqst”, but soon see that “_req” is 
+# already being used to indicate a request signal. They decide to use this suffix too, and a consistency begins to build up.
+#
+# (2) A new member of the team (or a long-standing one, as the case may be!) might be wondering what a certain prefix or suffix means. 
+# Say, for example, “PQ_”. They could then search the list of prefixes in the file (from anywhere in their environment and without 
+# opening the file – details of how this can be done are in <ADD DOCUMENT>) and see that “PQ_” indicates that 
+# whatever signal they are looking at is somehow related to the “Placement Queue”.
 
 # Modules that we will need:
 import os
@@ -28,6 +48,10 @@ suffix whose meaning you want to know. For example,
 
 listAllHelpMsg = infoTag + """Call the script with the --list_all switch in order
 to see all of the prefixes and suffixes used in the RTL, as well as their explanations.
+"""
+
+pathToDictHelpMsg = infoTag + """Call the script with the --path_to_dict switch if you want
+to search a RTL dictionary JSON file on a specific path
 """
 
 noArgsMsg  = errorTag + """No input arguments were specified."""
@@ -61,10 +85,8 @@ def parsingArguments():
     # switch then "True" will be stored for the 'list_all' argument. It acts like
     # a boolean variable
     parser.add_argument('--list_all', action = 'store_true', help = listAllHelpMsg)
+    parser.add_argument('--path_to_dict', type = str, help = pathToDictHelpMsg)
     return parser.parse_args()
-
-fileName = "rtl_dictionary.json" # name of the file
-filePath = "./" # path to the folder with the file
 
 def readInDictionary(pathToFile):
     with open(pathToFile) as p:
@@ -75,12 +97,12 @@ def readInDictionary(pathToFile):
             print(fileEmptyMsg.format(pathToFile))
             dictionary = {
                 "Prefixes" : {
-                "aref_": """Indicates that the signal is related to the auto-refresh operation or logic.""",
+                "aref_": """Indicates that the signal is to do with the auto-refresh logic.""",
                 "mmu_": """Indicates that the signal is coming from the memory-management unit."""
                 },
                 "Suffixes" : {
-                "_req": """Indicates that the signal is a request line or bus.""",
-                "_ctrl": """Indicates that the signal is a control signal or that it is coming from a control block."""
+                "_req": """Indicates a request line.""",
+                "_ctrl": """Indicates a control signal or a signal from a control block."""
                 }
             }
     return dictionary
@@ -111,11 +133,19 @@ if __name__ == "__main__":
         suffix = args.suffix
         lookUpSuffix = True
 
-    # ==== Ensure that only one switch was supplied ====
-    if (lookUpPrefix and lookUpSuffix):
-        print(unsupportedScriptUsageMsg)
-        exit()
-    
+    # ==== Check if the user has supplied a path to the folder with the RTL dictionary ====
+    pathSupplied = False
+    if args.path_to_dict:
+        filePath = args.path_to_dict
+        pathSupplied = True
+
+    fileName = "rtl_dictionary.json" # name of the file with all the RTL prefixes and suffixes
+    if not pathSupplied: # first, check that no path argument was supplied
+         # For now, we will store the file in the same directory as this script.
+         # Should the rtl_dictionary.json file be moved to a different directory, then the
+         # filePath variable below should be updated
+         filePath = "./"
+
     # ==== Step 1: Read in the RTL dictionary ====
     rtlDictionary = readInDictionary(filePath + fileName)
     
@@ -127,16 +157,14 @@ if __name__ == "__main__":
             print(explanationMsg.format(prefix, prefixExplanation))
         else:
             print(prefixSuffixNotFoundMsg.format("prefix", prefix, fileName))
-        exit()
-    elif (lookUpSuffix):
+    if (lookUpSuffix):
         suffixList = rtlDictionary["Suffixes"] # extract the suffix segment of the dictionary
         if suffix in suffixList: # check if the suffix is in the list
             suffixExplanation = suffixList[suffix] # extract the comment or explanation
             print(explanationMsg.format(suffix, suffixExplanation))
         else:
             print(prefixSuffixNotFoundMsg.format("suffix", suffix, fileName))
-        exit()
-    elif (printOutDictionary):
+    if (printOutDictionary):
         outputMsg = prefixSectionHeader
         prefixList = rtlDictionary["Prefixes"] # extract the prefix segment of the dictionary
         suffixList = rtlDictionary["Suffixes"] # extract the suffix segment of the dictionary
@@ -152,4 +180,4 @@ if __name__ == "__main__":
         
         # ==== Print the string to the console ====
         print(outputMsg)
-        exit()
+    exit()
